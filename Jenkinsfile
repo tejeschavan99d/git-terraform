@@ -5,6 +5,10 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
+    triggers {
+        githubPush()
+    }
+
     stages {
 
         stage('Checkout') {
@@ -12,16 +16,10 @@ pipeline {
                 sh '''
                     set -e
 
-                    rm -rf "${WORKSPACE}/git-terraform"
+                    rm -rf .git module2
 
                     git clone --depth 1 --branch main \
-                        https://github.com/tejeschavan99d/git-terraform.git \
-                        "${WORKSPACE}/git-terraform"
-
-                    cd "${WORKSPACE}/git-terraform"
-
-                    git status
-                    git log -1 --oneline
+                        https://github.com/tejeschavan99d/git-terraform.git .
                 '''
             }
         }
@@ -34,7 +32,6 @@ pipeline {
                 ]) {
                     sh '''
                         set -e
-
                         whoami
                         aws sts get-caller-identity
                     '''
@@ -44,7 +41,7 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                dir('git-terraform/module2') {
+                dir('module2') {
                     withCredentials([
                         [$class: 'AmazonWebServicesCredentialsBinding',
                          credentialsId: 'aws-terraform']
@@ -60,7 +57,7 @@ pipeline {
 
         stage('Terraform Plan - VPC') {
             steps {
-                dir('git-terraform/module2') {
+                dir('module2') {
                     withCredentials([
                         [$class: 'AmazonWebServicesCredentialsBinding',
                          credentialsId: 'aws-terraform']
@@ -72,6 +69,12 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'rm -rf module2/.terraform || true'
         }
     }
 }
