@@ -59,5 +59,20 @@ pipeline {
                 }
             }
         }
+
+        stage('Terraform Plan - SG') {
+            steps {
+                dir('module2') {
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding',
+                         credentialsId: 'aws-terraform']
+                    ]) {
+                        sh '''
+                            terraform plan -target=module.sg
+                        '''
+                    }
+                }
+            }
+        }
     }
 }
