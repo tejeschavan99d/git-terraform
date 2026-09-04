@@ -60,6 +60,16 @@ pipeline {
             }
         }
 
+        /*
+         * Manual approval between VPC and SG
+         */
+        stage('Approve VPC -> SG') {
+            steps {
+                input message: 'VPC plan completed. Do you want to continue with SG?', 
+                      ok: 'Proceed to SG'
+            }
+        }
+
         stage('Terraform Plan - SG') {
             steps {
                 dir('module2') {
