@@ -15,6 +15,16 @@ pipeline {
             }
         }
 
+        stage('Debug AWS') {
+            steps {
+                sh '''
+                    whoami
+                    id
+                    aws sts get-caller-identity
+                '''
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 dir('module2') {
