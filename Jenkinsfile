@@ -1,11 +1,34 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+    }
+
     stages {
+
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main',
+                    url: 'https://github.com/tejeschavan99d/git-terraform.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('module2') {
+                    sh '''
+                        rm -rf .terraform
+                        terraform init
+                    '''
+                }
             }
         }
 
@@ -16,26 +39,9 @@ pipeline {
                      credentialsId: 'aws-terraform']
                 ]) {
                     sh '''
-                        set -e
                         whoami
                         aws sts get-caller-identity
                     '''
-                }
-            }
-        }
-
-        stage('Terraform Init') {
-            steps {
-                dir('module2') {
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding',
-                         credentialsId: 'aws-terraform']
-                    ]) {
-                        sh '''
-                            set -e
-                            terraform init
-                        '''
-                    }
                 }
             }
         }
@@ -48,20 +54,11 @@ pipeline {
                          credentialsId: 'aws-terraform']
                     ]) {
                         sh '''
-                            set -e
                             terraform plan -target=module.vpc
                         '''
                     }
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            sh '''
-                rm -rf module2/.terraform || true
-            '''
         }
     }
 }
