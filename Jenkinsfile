@@ -9,31 +9,50 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    credentialsId: '0a2a713f-57cc-46e8-978d-de54ae250738',
-                    url: 'https://github.com/tejeschavan99d/git-terraform.git'
+                sh '''
+                    set -e
+
+                    rm -rf "${WORKSPACE}/git-terraform"
+
+                    git clone --depth 1 --branch main \
+                        https://github.com/tejeschavan99d/git-terraform.git \
+                        "${WORKSPACE}/git-terraform"
+
+                    cd "${WORKSPACE}/git-terraform"
+
+                    git status
+                    git log -1 --oneline
+                '''
             }
         }
 
-        stage('AWS Test') {
+        stage('AWS Credentials Test') {
             steps {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
                      credentialsId: 'aws-terraform']
                 ]) {
-                    sh 'aws sts get-caller-identity'
+                    sh '''
+                        set -e
+
+                        whoami
+                        aws sts get-caller-identity
+                    '''
                 }
             }
         }
 
         stage('Terraform Init') {
             steps {
-                dir('module2') {
+                dir('git-terraform/module2') {
                     withCredentials([
                         [$class: 'AmazonWebServicesCredentialsBinding',
                          credentialsId: 'aws-terraform']
                     ]) {
-                        sh 'terraform init'
+                        sh '''
+                            set -e
+                            terraform init
+                        '''
                     }
                 }
             }
@@ -41,12 +60,15 @@ pipeline {
 
         stage('Terraform Plan - VPC') {
             steps {
-                dir('module2') {
+                dir('git-terraform/module2') {
                     withCredentials([
                         [$class: 'AmazonWebServicesCredentialsBinding',
                          credentialsId: 'aws-terraform']
                     ]) {
-                        sh 'terraform plan -target=module.vpc'
+                        sh '''
+                            set -e
+                            terraform plan -target=module.vpc
+                        '''
                     }
                 }
             }
