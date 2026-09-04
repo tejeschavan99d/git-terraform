@@ -21,17 +21,6 @@ pipeline {
             }
         }
 
-        stage('Terraform Init') {
-            steps {
-                dir('module2') {
-                    sh '''
-                        rm -rf .terraform
-                        terraform init
-                    '''
-                }
-            }
-        }
-
         stage('AWS Credentials Test') {
             steps {
                 withCredentials([
@@ -41,6 +30,16 @@ pipeline {
                     sh '''
                         whoami
                         aws sts get-caller-identity
+                    '''
+                }
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('module2') {
+                    sh '''
+                        terraform init
                     '''
                 }
             }
