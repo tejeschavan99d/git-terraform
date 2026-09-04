@@ -1,26 +1,11 @@
 pipeline {
     agent any
 
-    options {
-        skipDefaultCheckout(true)
-    }
-
-    triggers {
-        githubPush()
-    }
-
     stages {
 
         stage('Checkout') {
             steps {
-                sh '''
-                    set -e
-
-                    rm -rf .git module2
-
-                    git clone --depth 1 --branch main \
-                        https://github.com/tejeschavan99d/git-terraform.git .
-                '''
+                checkout scm
             }
         }
 
@@ -74,7 +59,9 @@ pipeline {
 
     post {
         always {
-            sh 'rm -rf module2/.terraform || true'
+            sh '''
+                rm -rf module2/.terraform || true
+            '''
         }
     }
 }
