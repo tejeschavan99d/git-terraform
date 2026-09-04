@@ -15,20 +15,26 @@ pipeline {
             }
         }
 
-        stage('Debug AWS') {
+        stage('AWS Test') {
             steps {
-                sh '''
-                    whoami
-                    id
-                    aws sts get-caller-identity
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-terraform']
+                ]) {
+                    sh 'aws sts get-caller-identity'
+                }
             }
         }
 
         stage('Terraform Init') {
             steps {
                 dir('module2') {
-                    sh 'terraform init'
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding',
+                         credentialsId: 'aws-terraform']
+                    ]) {
+                        sh 'terraform init'
+                    }
                 }
             }
         }
@@ -36,10 +42,14 @@ pipeline {
         stage('Terraform Plan - VPC') {
             steps {
                 dir('module2') {
-                    sh 'terraform plan -target=module.vpc'
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding',
+                         credentialsId: 'aws-terraform']
+                    ]) {
+                        sh 'terraform plan -target=module.vpc'
+                    }
                 }
             }
         }
     }
 }
-
