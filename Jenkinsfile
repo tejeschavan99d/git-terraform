@@ -74,44 +74,51 @@ pipeline {
                 }
             }
         }
-        stage('Terraform Plan - IAM') {
-            steps {
-                dir('module2') {
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding',
-                         credentialsId: 'aws-terraform']
-                    ]) {
-                        sh '''
-                            terraform plan -target=module.iam
-                        '''
+        stage('Terraform Plan - IAM, Key Pair & S3') {
+            parallel {
+
+                stage('IAM') {
+                    steps {
+                        dir('module2') {
+                            withCredentials([
+                                [$class: 'AmazonWebServicesCredentialsBinding',
+                                 credentialsId: 'aws-terraform']
+                            ]) {
+                                sh '''
+                                    terraform plan -target=module.iam
+                                '''
+                            }
+                        }
                     }
                 }
-            }
-        }
-        stage('Terraform Plan - key_pair') {
-            steps {
-                dir('module2') {
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding',
-                         credentialsId: 'aws-terraform']
-                    ]) {
-                        sh '''
-                            terraform plan -target=module.key_pair
-                        '''
+
+                stage('Key Pair') {
+                    steps {
+                        dir('module2') {
+                            withCredentials([
+                                [$class: 'AmazonWebServicesCredentialsBinding',
+                                 credentialsId: 'aws-terraform']
+                            ]) {
+                                sh '''
+                                    terraform plan -target=module.key_pair
+                                '''
+                            }
+                        }
                     }
                 }
-            }
-        }
-        stage('Terraform Plan - S3') {
-            steps {
-                dir('module2') {
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding',
-                         credentialsId: 'aws-terraform']
-                    ]) {
-                        sh '''
-                            terraform plan -target=module.s3
-                        '''
+
+                stage('S3') {
+                    steps {
+                        dir('module2') {
+                            withCredentials([
+                                [$class: 'AmazonWebServicesCredentialsBinding',
+                                 credentialsId: 'aws-terraform']
+                            ]) {
+                                sh '''
+                                    terraform plan -target=module.s3
+                                '''
+                            }
+                        }
                     }
                 }
             }
